@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -eu
+name=$1
+portoffset=$2
+mkdir -p $PWD/$name/{state,spool}
+cat > $name/conf <<EOF
+AuthType=auth/none
+ClusterName=$name
+ControlMachine=localhost
+SlurmctldPort=$((6817 + $portoffset))
+SlurmdPort=$((6818 + $portoffset))
+SlurmUser=`whoami`
+SlurmdUser=`whoami`
+StateSaveLocation=$PWD/$name/state
+SlurmdSpoolDir=$PWD/$name/spool
+SlurmdPidFile=$PWD/$name/slurmd.pid
+SlurmctldPidFile=$PWD/$name/slurmctld.pid
+SlurmctldLogFile=$PWD/$name/slurmctld.log
+SlurmdLogFile=$PWD/$name/slurmd.log
+NodeName=localhost State=UNKNOWN Sockets=1 ThreadsPerCore=2 CoresPerSocket=4 RealMemory=4096
+PartitionName=$name Nodes=localhost State=UP Default=YES
+SchedulerType=sched/backfill
+SelectType=select/cons_res
+SelectTypeParameters=CR_Core,CR_CORE_DEFAULT_DIST_BLOCK,CR_ONE_TASK_PER_CORE
+EOF
+
+cat > $name/activate <<EOF
+export SLURM_CONF=$PWD/$name/conf
+EOF
