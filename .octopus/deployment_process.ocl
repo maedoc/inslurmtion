@@ -1,0 +1,55 @@
+step "generate-configs" {
+    name = "Generate configs"
+    package_requirement = "AfterPackageAcquisition"
+    properties = {
+        Octopus.Action.TargetRoles = "slurm-boot"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        notes = <<-EOT
+                # what
+                
+                This generates the configuration files required for starting a basic Slurm cluster
+                
+                # why
+                
+                So you can run it.
+                EOT
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                ./setup outer 0
+                ./setup inner 10
+                EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "Bash"
+        }
+        worker_pool_variable = ""
+    }
+}
+
+step "run-a-script" {
+    name = "Run a Script"
+    properties = {
+        Octopus.Action.TargetRoles = "slurm-boot"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                export SLURM_CONF=$PWD/outer/conf
+                slurmctld
+                slurmd
+                
+                sleep 10
+                sinfo
+                EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "Bash"
+        }
+        worker_pool_variable = ""
+    }
+}
